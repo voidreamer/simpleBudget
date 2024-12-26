@@ -144,6 +144,7 @@ const BudgetApp = () => {
           openModal={openModal}
           handleDeleteCategory={handleDeleteCategory}
           handleDeleteSubcategory={handleDeleteSubcategory}
+          handleEditSubcategory={setEditingSubcategory}
         />
         <ChartSection chartData={chartData} />
       </main>

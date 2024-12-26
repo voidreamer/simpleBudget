@@ -9,7 +9,8 @@ const CategoryList = ({
   toggleCategory,
   openModal,
   handleDeleteCategory,
-  handleDeleteSubcategory
+  handleDeleteSubcategory,
+  handleEditSubcategory
 }) => {
   return (
     <div className="w-1/2 bg-white rounded-lg shadow">
@@ -26,6 +27,7 @@ const CategoryList = ({
               onAddSubcategory={() => openModal('subcategory', categoryName)}
               onDeleteCategory={() => handleDeleteCategory(categoryName)}
               onDeleteSubcategory={handleDeleteSubcategory}
+              onEditSubcategory={handleEditSubcategory}
             />
           ))}
         </div>
@@ -41,7 +43,8 @@ const CategoryItem = ({
   onToggle,
   onAddSubcategory,
   onDeleteCategory,
-  onDeleteSubcategory
+  onDeleteSubcategory,
+  onEditSubcategory
 }) => {
   return (
     <div className="rounded-lg border border-gray-200">
@@ -70,6 +73,7 @@ const CategoryItem = ({
           items={categoryData.items}
           categoryName={categoryName}
           onDeleteSubcategory={onDeleteSubcategory}
+          onEditSubcategory={onEditSubcategory}
         />
       )}
     </div>
@@ -100,32 +104,48 @@ const CategoryActions = ({ onAddSubcategory, onDeleteCategory }) => {
   );
 };
 
-const SubcategoryList = ({ items, categoryName, onDeleteSubcategory }) => {
-  return (
-    <div className="border-t border-gray-200">
-      {items.map((item) => (
-        <div
-          key={item.name}
-          className="p-3 pl-10 hover:bg-gray-50 flex justify-between items-center"
-        >
-          <span>{item.name}</span>
-          <div className="flex items-center gap-4">
-            <span className="text-blue-600">${item.allotted}</span>
-            <span className={item.spending > item.allotted ? 'text-red-600' : 'text-green-600'}>
-              ${item.spending}
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onDeleteSubcategory(categoryName, item.name)}
-            >
-              <MoreVertical className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      ))}
+const SubcategoryList = ({ items, categoryName, onDeleteSubcategory, onEditSubcategory }) => (
+  <div className="border-t border-gray-200">
+    {items.map((item) => (
+      <SubcategoryItem
+        key={item.name}
+        item={item}
+        categoryName={categoryName}
+        onDeleteSubcategory={onDeleteSubcategory}
+        onEditSubcategory={onEditSubcategory}
+      />
+    ))}
+  </div>
+);
+
+const SubcategoryItem = ({ item, categoryName, onDeleteSubcategory, onEditSubcategory }) => (
+  <div className="p-3 pl-10 hover:bg-gray-50 flex justify-between items-center">
+    <span>{item.name}</span>
+    <div className="flex items-center gap-4">
+      <span className="text-blue-600">${item.allotted}</span>
+      <span className={item.spending > item.allotted ? 'text-red-600' : 'text-green-600'}>
+        ${item.spending}
+      </span>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm">
+            <MoreVertical className="w-4 h-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem onClick={() => onEditSubcategory(item)}>
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => onDeleteSubcategory(categoryName, item.name)}
+            className="text-red-600"
+          >
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
-  );
-};
+  </div>
+);
 
 export default CategoryList;
