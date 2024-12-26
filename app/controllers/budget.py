@@ -30,6 +30,7 @@ def create_category(category: schemas.CategoryCreate, db: Session = Depends(get_
 
 @router.get("/categories/", response_model=List[schemas.Category])
 def read_categories(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    print("Categories from DB:", db.query(models.Category).all())  # Debug
     return service.get_categories(db, skip=skip, limit=limit)
 
 
@@ -52,16 +53,11 @@ def month_to_number(month: str) -> int:
 
 @router.get("/budget-summary/{year}/{month}")
 def get_budget_summary(year: int, month: Union[str, int], db: Session = Depends(get_db)):
-    print(f"Received request for year: {year}, month: {month}")
-
     # Convert month name to number if it's a string
     month_num = month_to_number(month) if isinstance(month, str) else month
-    all_subs = db.query(models.Subcategory).filter(
-        models.Subcategory.year == year,
-        models.Subcategory.month == month_num
-    ).all()
-
     categories = db.query(models.Category).all()
+    for cat in categories:
+        print(cat.name)
 
     result = []
     for category in categories:
@@ -72,41 +68,43 @@ def get_budget_summary(year: int, month: Union[str, int], db: Session = Depends(
             models.Subcategory.month == month_num
         ).all()
 
-        if len(subcategories) > 0:  # Only add categories that have subcategories
-            category_data = {
-                "name": category.name,
-                "budget": category.budget,
-                "subcategories": []
+        category_data = {
+            "id": category.id,
+            "name": category.name,
+            "budget": category.budget,
+            "subcategories": []
+        }
+
+        for subcategory in subcategories:
+            # Get transactions for this subcategory
+            transactions = db.query(models.Transaction).filter(
+                models.Transaction.subcategory_id == subcategory.id
+            ).all()
+
+            spending = sum(t.amount for t in transactions)
+
+            subcategory_data = {
+                "id": subcategory.id,
+                "name": subcategory.name,
+                "allotted": subcategory.allotted,
+                "spending": float(spending)
             }
+            category_data["subcategories"].append(subcategory_data)
 
-            for subcategory in subcategories:
-                # Get transactions for this subcategory
-                transactions = db.query(models.Transaction).filter(
-                    models.Transaction.subcategory_id == subcategory.id
-                ).all()
+        result.append(category_data)
 
-                spending = sum(t.amount for t in transactions)
-
-                subcategory_data = {
-                    "name": subcategory.name,
-                    "allotted": subcategory.allotted,
-                    "spending": float(spending)
-                }
-                category_data["subcategories"].append(subcategory_data)
-
-            result.append(category_data)
-
-    print(f"Returning data: {result}")
+    # print(f"Returning data: {result}")
     return result
 
 
 @router.delete("/categories/{category_id}")
 def delete_category(category_id: int, db: Session = Depends(get_db)):
+    print(f'deleting {category_id}')
     category = db.query(models.Category).filter(models.Category.id == category_id).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
 
-    # Delete associated subcategories and transactions first
+    # Delete cascading relationships
     for subcategory in category.subcategories:
         db.query(models.Transaction).filter(models.Transaction.subcategory_id == subcategory.id).delete()
     db.query(models.Subcategory).filter(models.Subcategory.category_id == category_id).delete()
@@ -131,16 +129,27 @@ def delete_subcategory(subcategory_id: int, db: Session = Depends(get_db)):
 
 @router.put("/subcategories/{subcategory_id}")
 def update_subcategory(
-        subcategory_id: int,
-        data: dict,
-        db: Session = Depends(get_db)
+    subcategory_id: int,  # FastAPI will validate this is an integer
+    data: schemas.SubcategoryUpdate,  # Create this schema
+    db: Session = Depends(get_db)
 ):
-    subcategory = db.query(models.Subcategory).filter(models.Subcategory.id == subcategory_id).first()
-    if not subcategory:
-        raise HTTPException(status_code=404, detail="Subcategory not found")
+    try:
+        subcategory = db.query(models.Subcategory).filter(
+            models.Subcategory.id == subcategory_id
+        ).first()
+        
+        if not subcategory:
+            raise HTTPException(status_code=404, detail="Subcategory not found")
 
-    if 'allotted' in data:
-        subcategory.allotted = data['allotted']
+        if hasattr(data, 'allotted'):
+            subcategory.allotted = data.allotted
+        if hasattr(data, 'year'):
+            subcategory.year = data.year
+        if hasattr(data, 'month'):
+            subcategory.month = data.month
 
-    db.commit()
-    return subcategory
+        db.commit()
+        return subcategory
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+

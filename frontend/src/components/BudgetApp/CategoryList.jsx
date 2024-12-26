@@ -25,7 +25,7 @@ const CategoryList = ({
               isExpanded={expandedCategories.includes(categoryName)}
               onToggle={() => toggleCategory(categoryName)}
               onAddSubcategory={() => openModal('subcategory', categoryName)}
-              onDeleteCategory={() => handleDeleteCategory(categoryName)}
+              onDeleteCategory={() => handleDeleteCategory(categoryData.id)}
               onDeleteSubcategory={handleDeleteSubcategory}
               onEditSubcategory={handleEditSubcategory}
             />
@@ -61,8 +61,8 @@ const CategoryItem = ({
           <div className="flex items-center gap-4">
             <span className="text-gray-500">Budget: ${categoryData.budget}</span>
             <CategoryActions
-              onAddSubcategory={onAddSubcategory}
-              onDeleteCategory={onDeleteCategory}
+              onAddSubcategory={() => onAddSubcategory(categoryData.id)}
+              onDeleteCategory={() => onDeleteCategory(categoryData.id)}
             />
           </div>
         </div>
@@ -94,7 +94,10 @@ const CategoryActions = ({ onAddSubcategory, onDeleteCategory }) => {
           Add Subcategory
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={onDeleteCategory}
+          onClick={() => {
+            console.log('Delete clicked', onDeleteCategory); // Debug
+            onDeleteCategory();
+          }}
           className="text-red-600"
         >
           Delete Category
@@ -118,7 +121,7 @@ const SubcategoryList = ({ items, categoryName, onDeleteSubcategory, onEditSubca
   </div>
 );
 
-const SubcategoryItem = ({ item, categoryName, onDeleteSubcategory, onEditSubcategory }) => (
+const SubcategoryItem = ({ item, categoryId, onDeleteSubcategory, onEditSubcategory}) => (
   <div className="p-3 pl-10 hover:bg-gray-50 flex justify-between items-center">
     <span>{item.name}</span>
     <div className="flex items-center gap-4">
@@ -133,11 +136,11 @@ const SubcategoryItem = ({ item, categoryName, onDeleteSubcategory, onEditSubcat
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          <DropdownMenuItem onClick={() => onEditSubcategory(item)}>
+          <DropdownMenuItem onClick={() => onEditSubcategory(item, categoryId)}>
             Edit
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => onDeleteSubcategory(categoryName, item.name)}
+            onClick={() => onDeleteSubcategory(item.id)}
             className="text-red-600"
           >
             Delete

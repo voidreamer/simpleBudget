@@ -2,13 +2,16 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import List, Optional
 
+
 class TransactionBase(BaseModel):
     description: str
     amount: float
     date: Optional[datetime] = None
 
+
 class TransactionCreate(TransactionBase):
     subcategory_id: int
+
 
 class Transaction(TransactionBase):
     id: int
@@ -17,12 +20,21 @@ class Transaction(TransactionBase):
     class Config:
         from_attributes = True
 
+
 class SubcategoryBase(BaseModel):
     name: str
     allotted: float
 
+
 class SubcategoryCreate(SubcategoryBase):
     category_id: int
+
+
+class SubcategoryUpdate(BaseModel):
+    allotted: Optional[float] = None
+    year: Optional[int] = None
+    month: Optional[int] = None
+
 
 class Subcategory(SubcategoryBase):
     id: int
@@ -32,12 +44,15 @@ class Subcategory(SubcategoryBase):
     class Config:
         from_attributes = True
 
+
 class CategoryBase(BaseModel):
     name: str
     budget: float
 
+
 class CategoryCreate(CategoryBase):
     pass
+
 
 class Category(CategoryBase):
     id: int

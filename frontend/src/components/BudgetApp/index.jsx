@@ -39,68 +39,91 @@ const BudgetApp = () => {
   };
 
   const openModal = (type, category = null) => {
+    console.log('Opening modal:', type, category); // Debug
     setModalType(type);
     setSelectedCategory(category);
     setIsCategoryModalOpen(true);
   };
 
   const handleAddCategory = async (data) => {
-    try {
-      const response = await budgetApi.createCategory(data);
-      await loadBudgetData(selectedDate.split(' ')[1], selectedDate.split(' ')[0]);
-    } catch (error) {
-      console.error('Error adding category:', error);
-    }
-  };
-  const handleEditSubcategory = async (data) => {
-    if (!editingSubcategory) return;
-
-    try {
-      await budgetApi.updateSubcategory(editingSubcategory.id, data);
-      setEditingSubcategory(null);
-      // Reload data
-      const [month, year] = selectedDate.split(' ');
-      await loadBudgetData(year, month);
-    } catch (error) {
-      console.error('Error updating subcategory:', error);
-    }
-  };
-
-  /*
-  const handleAddCategory = (data) => {
-    setCategories(prev => ({
-      ...prev,
-      [data.name]: { budget: data.budget, items: [] }
-    }));
-  };
-  */
-  const handleAddSubcategory = (data) => {
-    if (!selectedCategory) return;
-    setCategories(prev => ({
-      ...prev,
-      [selectedCategory]: {
-        ...prev[selectedCategory],
-        items: [...prev[selectedCategory].items, { name: data.name, allotted: data.allotted, spending: 0 }]
+      try {
+        const response = await budgetApi.createCategory(data);
+        console.log('New category:', response); // Check if ID is returned
+        await loadBudgetData(selectedDate.split(' ')[1], selectedDate.split(' ')[0]);
+      } catch (error) {
+        console.error('Error adding category:', error);
       }
-    }));
-  };
+    };
 
-  const handleDeleteCategory = (categoryName) => {
-    setCategories(prev => {
-      const newCategories = { ...prev };
-      delete newCategories[categoryName];
-      return newCategories;
-    });
-  };
+  const handleDeleteCategory = async (categoryId) => {
+    console.log('handleDeleteCategory called with ID:', categoryId);
+    if (!categoryId) {
+        console.error('No category ID provided');
+        return;
+    }
+    try {
+        await budgetApi.deleteCategory(categoryId);
+            const [month, year] = selectedDate.split(' ');
+            await loadBudgetData(year, month);
+        } catch (error) {
+        console.error('Error deleting category:', error);
+    }
+    };
 
-  const handleDeleteSubcategory = (categoryName, subcategoryName) => {
-    setCategories(prev => ({
-      ...prev,
-      [categoryName]: {
-        ...prev[categoryName],
-        items: prev[categoryName].items.filter(item => item.name !== subcategoryName)
+    const handleAddSubcategory = async (data) => {
+      if (!selectedCategory?.id) return;
+      try {
+        const [month, year] = selectedDate.split(' ');
+        const subcategoryData = {
+          name: data.name,
+          allotted: data.allotted,
+          category_id: selectedCategory.id,
+          year: parseInt(year),
+          month: new Date(`${month} 1, 2000`).getMonth() + 1
+        };
+        await budgetApi.createSubcategory(subcategoryData);
+        await loadBudgetData(year, month);
+      } catch (error) {
+        console.error('Error adding subcategory:', error);
       }
-    }));
+    };
+
+    const handleEditSubcategory = async (data) => {
+      if (!data?.id) return;
+      try {
+        await budgetApi.updateSubcategory(data.id, {
+          allotted: parseFloat(data.allotted)
+        });
+        const [month, year] = selectedDate.split(' ');
+        await loadBudgetData(year, month);
+      } catch (error) {
+        console.error('Error updating subcategory:', error);
+      }
+    };
+
+    const handleDeleteSubcategory = async (subcategoryId) => {
+      if (!subcategoryId) return;
+      try {
+        await budgetApi.deleteSubcategory(subcategoryId);
+        const [month, year] = selectedDate.split(' ');
+        await loadBudgetData(year, month);
+      } catch (error) {
+        console.error('Error deleting subcategory:', error);
+      }
+    };
+
+  const loadBudgetData = async (year, month) => {
+      try {
+        console.log(`Loading budget data for ${year} ${month}`);
+        const data = await budgetApi.fetchBudgetData(year, month);
+        console.log('Budget data:', data);
+        if (data) {
+          setCategories(data);
+        }
+      } catch (error) {
+        console.error('Error loading budget data:', error);
+        // Add user feedback here if needed
+      }
   };
 
   // Transform data for chart
@@ -110,19 +133,6 @@ const BudgetApp = () => {
     Allotted: data.items.reduce((sum, item) => sum + item.allotted, 0),
     Spending: data.items.reduce((sum, item) => sum + item.spending, 0),
   }));
-
-    const loadBudgetData = async (year, month) => {
-      try {
-        console.log(`Loading budget data for ${year} ${month}`);
-        const data = await budgetApi.fetchBudgetData(year, month);
-        if (data) {
-          setCategories(data);
-        }
-      } catch (error) {
-        console.error('Error loading budget data:', error);
-        // Add user feedback here if needed
-      }
-    };
 
     useEffect(() => {
       const [month, year] = selectedDate.split(' ');

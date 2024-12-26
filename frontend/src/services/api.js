@@ -21,6 +21,7 @@ export const budgetApi = {
         if (Array.isArray(data)) {
           data.forEach(category => {
             transformedData[category.name] = {
+              id: category.id,
               budget: category.budget,
               items: category.subcategories.map(sub => ({
                 name: sub.name,
@@ -40,29 +41,31 @@ export const budgetApi = {
     },
 
 
-  async createCategory(categoryData) {
-    const response = await fetch(`${API_BASE_URL}/categories/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: categoryData.name,
-        budget: categoryData.budget
-      })
-    });
-    return response.json();
-  },
-
-  async createSubcategory(data) {
-    const response = await fetch(`${API_BASE_URL}/subcategories/`, {
+  async createCategory(data) {
+    const response = await fetch(`${API_BASE_URL}/categories/?month=${data.month}&year=${data.year}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: data.name,
-        allotted: data.allotted,
-        category_id: data.categoryId
+        budget: data.budget
       })
     });
+    if (!response.ok) {
+      throw new Error('Failed to create category');
+    }
     return response.json();
+  },
+
+  async createSubcategory(data) {
+    console.log('Creating subcategory:', data);
+    const response = await fetch(`${API_BASE_URL}/subcategories/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const result = await response.json();
+    console.log('Create subcategory response:', result);
+    return result;
   },
 
   async createTransaction(data) {
@@ -80,11 +83,13 @@ export const budgetApi = {
   },
 
   async deleteCategory(categoryId) {
+    console.log('aaa Deleting category:', categoryId);
     const response = await fetch(`${API_BASE_URL}/categories/${categoryId}`, {
       method: 'DELETE',
     });
     if (!response.ok) {
-      throw new Error('Failed to delete category');
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to delete category');
     }
     return response.json();
   },
@@ -94,22 +99,21 @@ export const budgetApi = {
       method: 'DELETE',
     });
     if (!response.ok) {
-      throw new Error('Failed to delete subcategory');
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to delete subcategory');
     }
     return response.json();
   },
 
-  async updateSubcategory(subcategoryId, data) {
-    const response = await fetch(`${API_BASE_URL}/subcategories/${subcategoryId}`, {
+  async updateSubcategory(id, data) {
+    console.log('Updating subcategory:', id, data);
+    const response = await fetch(`${API_BASE_URL}/subcategories/${id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
     });
-    if (!response.ok) {
-      throw new Error('Failed to update subcategory');
-    }
-    return response.json();
-  }
+    const result = await response.json();
+    console.log('Update subcategory response:', result);
+    return result;
+ }
 };
