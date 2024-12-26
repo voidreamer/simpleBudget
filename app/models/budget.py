@@ -1,3 +1,4 @@
+# models/budget.py
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from ..database import Base
@@ -20,6 +21,8 @@ class Subcategory(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     allotted = Column(Float)
+    year = Column(Integer)
+    month = Column(Integer)
     category_id = Column(Integer, ForeignKey("categories.id"))
     created_at = Column(DateTime, default=datetime.utcnow)
     category = relationship("Category", back_populates="subcategories")

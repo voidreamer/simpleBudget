@@ -1,3 +1,4 @@
+# controllers/budget.py
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -51,37 +52,40 @@ def month_to_number(month: str) -> int:
 
 @router.get("/budget-summary/{year}/{month}")
 def get_budget_summary(year: int, month: Union[str, int], db: Session = Depends(get_db)):
-    try:
-        # Convert month name to number if it's a string
-        month_num = month_to_number(month) if isinstance(month, str) else month
+    print(f"Received request for year: {year}, month: {month}")
 
-        # Get start and end dates for the month
-        start_date = datetime(year, month_num, 1)
-        if month_num == 12:
-            end_date = datetime(year + 1, 1, 1)
-        else:
-            end_date = datetime(year, month_num + 1, 1)
+    # Convert month name to number if it's a string
+    month_num = month_to_number(month) if isinstance(month, str) else month
+    all_subs = db.query(models.Subcategory).filter(
+        models.Subcategory.year == year,
+        models.Subcategory.month == month_num
+    ).all()
 
-        print(f"Fetching data for {year}-{month_num} ({start_date} to {end_date})")
+    categories = db.query(models.Category).all()
 
-        # Query all categories
-        categories = db.query(models.Category).all()
+    result = []
+    for category in categories:
+        # Query subcategories for this specific category and month
+        subcategories = db.query(models.Subcategory).filter(
+            models.Subcategory.category_id == category.id,
+            models.Subcategory.year == year,
+            models.Subcategory.month == month_num
+        ).all()
 
-        result = []
-        for category in categories:
+        if len(subcategories) > 0:  # Only add categories that have subcategories
             category_data = {
                 "name": category.name,
                 "budget": category.budget,
                 "subcategories": []
             }
 
-            for subcategory in category.subcategories:
-                # Sum transactions for this subcategory in the given month
-                spending = db.query(func.sum(models.Transaction.amount)) \
-                               .filter(models.Transaction.subcategory_id == subcategory.id) \
-                               .filter(models.Transaction.date >= start_date) \
-                               .filter(models.Transaction.date < end_date) \
-                               .scalar() or 0.0
+            for subcategory in subcategories:
+                # Get transactions for this subcategory
+                transactions = db.query(models.Transaction).filter(
+                    models.Transaction.subcategory_id == subcategory.id
+                ).all()
+
+                spending = sum(t.amount for t in transactions)
 
                 subcategory_data = {
                     "name": subcategory.name,
@@ -92,12 +96,8 @@ def get_budget_summary(year: int, month: Union[str, int], db: Session = Depends(
 
             result.append(category_data)
 
-        print(f"Returning data: {result}")
-        return result
-
-    except Exception as e:
-        print(f"Error in get_budget_summary: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+    print(f"Returning data: {result}")
+    return result
 
 
 @router.delete("/categories/{category_id}")

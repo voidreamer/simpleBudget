@@ -3,48 +3,41 @@ const API_BASE_URL = 'http://localhost:8000/api';
 
 export const budgetApi = {
   async fetchBudgetData(year, month) {
-    try {
-      // Make sure month is properly formatted
-      console.log(`Fetching data for ${year}-${month}`);
-      const response = await fetch(`${API_BASE_URL}/budget-summary/${year}/${month}`, {
-        headers: {
-          'Accept': 'application/json',
+      try {
+        console.log(`Fetching data for ${year}-${month}`); // Debug log
+        const response = await fetch(`${API_BASE_URL}/budget-summary/${year}/${month}`);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Error response:', errorData); // Debug log
+          throw new Error(errorData.detail || 'Failed to fetch budget data');
         }
-      });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to fetch budget data');
+        const data = await response.json();
+        console.log('Raw API response:', data); // Debug log
+
+        // Transform API data to our frontend format
+        const transformedData = {};
+        if (Array.isArray(data)) {
+          data.forEach(category => {
+            transformedData[category.name] = {
+              budget: category.budget,
+              items: category.subcategories.map(sub => ({
+                name: sub.name,
+                allotted: sub.allotted,
+                spending: sub.spending
+              }))
+            };
+          });
+        }
+
+        console.log('Transformed data:', transformedData); // Debug log
+        return transformedData;
+      } catch (error) {
+        console.error('Error fetching budget data:', error);
+        throw error;
       }
-
-      const data = await response.json();
-      console.log('Received data:', data);
-
-      // Transform API data to our frontend format
-      const transformedData = {};
-
-      if (Array.isArray(data)) {
-        data.forEach(category => {
-          transformedData[category.name] = {
-            budget: category.budget,
-            items: category.subcategories.map(sub => ({
-              name: sub.name,
-              allotted: sub.allotted,
-              spending: sub.spending
-            }))
-          };
-        });
-      }
-
-      console.log('Transformed data:', transformedData);
-      return transformedData;
-
-    } catch (error) {
-      console.error('Error fetching budget data:', error);
-      throw error;
-    }
-  },
-
+    },
 
 
   async createCategory(categoryData) {
