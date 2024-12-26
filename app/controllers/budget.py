@@ -2,7 +2,7 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func
+from sqlalchemy import func, extract
 from sqlalchemy.orm import Session
 from typing import List, Union
 
@@ -53,21 +53,15 @@ def month_to_number(month: str) -> int:
 
 @router.get("/budget-summary/{year}/{month}")
 def get_budget_summary(year: int, month: Union[str, int], db: Session = Depends(get_db)):
-    # Convert month name to number if it's a string
     month_num = month_to_number(month) if isinstance(month, str) else month
-    categories = db.query(models.Category).all()
-    for cat in categories:
-        print(cat.name)
+
+    categories = db.query(models.Category).filter(
+        models.Category.year == year,
+        models.Category.month == month_num
+    ).all()
 
     result = []
     for category in categories:
-        # Query subcategories for this specific category and month
-        subcategories = db.query(models.Subcategory).filter(
-            models.Subcategory.category_id == category.id,
-            models.Subcategory.year == year,
-            models.Subcategory.month == month_num
-        ).all()
-
         category_data = {
             "id": category.id,
             "name": category.name,
@@ -75,14 +69,8 @@ def get_budget_summary(year: int, month: Union[str, int], db: Session = Depends(
             "subcategories": []
         }
 
-        for subcategory in subcategories:
-            # Get transactions for this subcategory
-            transactions = db.query(models.Transaction).filter(
-                models.Transaction.subcategory_id == subcategory.id
-            ).all()
-
-            spending = sum(t.amount for t in transactions)
-
+        for subcategory in category.subcategories:
+            spending = sum(t.amount for t in subcategory.transactions)
             subcategory_data = {
                 "id": subcategory.id,
                 "name": subcategory.name,
@@ -93,9 +81,7 @@ def get_budget_summary(year: int, month: Union[str, int], db: Session = Depends(
 
         result.append(category_data)
 
-    # print(f"Returning data: {result}")
     return result
-
 
 @router.delete("/categories/{category_id}")
 def delete_category(category_id: int, db: Session = Depends(get_db)):
@@ -128,28 +114,14 @@ def delete_subcategory(subcategory_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/subcategories/{subcategory_id}")
-def update_subcategory(
-    subcategory_id: int,  # FastAPI will validate this is an integer
-    data: schemas.SubcategoryUpdate,  # Create this schema
-    db: Session = Depends(get_db)
-):
-    try:
-        subcategory = db.query(models.Subcategory).filter(
-            models.Subcategory.id == subcategory_id
-        ).first()
-        
-        if not subcategory:
-            raise HTTPException(status_code=404, detail="Subcategory not found")
+def update_subcategory(subcategory_id: int, data: dict, db: Session = Depends(get_db)):
+    print(f"Updating subcategory {subcategory_id} with data:", data)  # Debug
+    subcategory = db.query(models.Subcategory).filter(models.Subcategory.id == subcategory_id).first()
+    if not subcategory:
+        raise HTTPException(status_code=404, detail="Subcategory not found")
 
-        if hasattr(data, 'allotted'):
-            subcategory.allotted = data.allotted
-        if hasattr(data, 'year'):
-            subcategory.year = data.year
-        if hasattr(data, 'month'):
-            subcategory.month = data.month
+    if 'allotted' in data:
+        subcategory.allotted = data['allotted']
 
-        db.commit()
-        return subcategory
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
+    db.commit()
+    return subcategory

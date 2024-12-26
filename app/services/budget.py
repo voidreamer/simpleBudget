@@ -6,7 +6,14 @@ from datetime import datetime
 
 
 def create_category(db: Session, category: schemas.CategoryCreate):
-    db_category = models.Category(**category.dict())
+    current_date = datetime.now()
+    db_category = models.Category(
+        name=category.name,
+        budget=category.budget,
+        year=current_date.year,
+        month=current_date.month,
+        created_at=current_date
+    )
     db.add(db_category)
     db.commit()
     db.refresh(db_category)
@@ -18,7 +25,12 @@ def get_categories(db: Session, skip: int = 0, limit: int = 100):
 
 
 def create_subcategory(db: Session, subcategory: schemas.SubcategoryCreate):
-    db_subcategory = models.Subcategory(**subcategory.dict())
+    db_subcategory = models.Subcategory(
+        name=subcategory.name,
+        allotted=subcategory.allotted,
+        category_id=subcategory.category_id,
+        created_at=datetime.now()
+    )
     db.add(db_subcategory)
     db.commit()
     db.refresh(db_subcategory)

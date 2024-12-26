@@ -65,7 +65,7 @@ def verify_migration(db: Session):
         ).all()
         print(f"Subcategories for {cat.name}:")
         for sub in subcategories:
-            print(f"  - {sub.name} (Year: {sub.year}, Month: {sub.month}, Allotted: {sub.allotted})")
+            print(f"  - {sub.name} Allotted: {sub.allotted})")
 
 
 if __name__ == "__main__":

@@ -14,6 +14,7 @@ const Header = ({ selectedDate, setSelectedDate, openModal }) => {
               onChange={(e) => setSelectedDate(e.target.value)}
               className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             >
+              <option>October 2024</option>
               <option>November 2024</option>
               <option>December 2024</option>
             </select>

@@ -71,34 +71,35 @@ const BudgetApp = () => {
     };
 
     const handleAddSubcategory = async (data) => {
-      if (!selectedCategory?.id) return;
-      try {
-        const [month, year] = selectedDate.split(' ');
-        const subcategoryData = {
-          name: data.name,
-          allotted: data.allotted,
-          category_id: selectedCategory.id,
-          year: parseInt(year),
-          month: new Date(`${month} 1, 2000`).getMonth() + 1
-        };
-        await budgetApi.createSubcategory(subcategoryData);
-        await loadBudgetData(year, month);
-      } catch (error) {
-        console.error('Error adding subcategory:', error);
-      }
-    };
+        console.log('handleAddSubcategory :', selectedCategory?.id);
+        if (!selectedCategory?.id) return;
+        try {
+            const subcategoryData = {
+                name: data.name,
+                allotted: data.allotted,
+                category_id: selectedCategory.id
+            };
+            await budgetApi.createSubcategory(subcategoryData);
+            const [month, year] = selectedDate.split(' ');
+            await loadBudgetData(year, month);
+        } catch (error) {
+            console.error('Error adding subcategory:', error);
+        }
+      };
 
     const handleEditSubcategory = async (data) => {
-      if (!data?.id) return;
-      try {
-        await budgetApi.updateSubcategory(data.id, {
-          allotted: parseFloat(data.allotted)
-        });
-        const [month, year] = selectedDate.split(' ');
-        await loadBudgetData(year, month);
-      } catch (error) {
-        console.error('Error updating subcategory:', error);
-      }
+        console.log('Editing subcategory:', data); // Debug
+        if (!data?.id) return;
+        try {
+            await budgetApi.updateSubcategory(data.id, {
+                allotted: parseFloat(data.allotted),
+                spending: parseFloat(data.spending)
+            });
+            const [month, year] = selectedDate.split(' ');
+            await loadBudgetData(year, month);
+        } catch (error) {
+            console.error('Error updating subcategory:', error);
+        }
     };
 
     const handleDeleteSubcategory = async (subcategoryId) => {
@@ -122,7 +123,6 @@ const BudgetApp = () => {
         }
       } catch (error) {
         console.error('Error loading budget data:', error);
-        // Add user feedback here if needed
       }
   };
 

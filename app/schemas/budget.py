@@ -51,7 +51,8 @@ class CategoryBase(BaseModel):
 
 
 class CategoryCreate(CategoryBase):
-    pass
+    year: Optional[int] = None  # Default to current year if not provided
+    month: Optional[int] = None # Default to current month if not provided
 
 
 class Category(CategoryBase):

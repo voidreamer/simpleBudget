@@ -24,6 +24,7 @@ export const budgetApi = {
               id: category.id,
               budget: category.budget,
               items: category.subcategories.map(sub => ({
+                id: sub.id,
                 name: sub.name,
                 allotted: sub.allotted,
                 spending: sub.spending

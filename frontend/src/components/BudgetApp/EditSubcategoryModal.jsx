@@ -9,8 +9,9 @@ const EditSubcategoryModal = ({ isOpen, onClose, subcategory, onSubmit }) => {
 
   const handleSubmit = () => {
     onSubmit({
-      allotted: parseFloat(allotted),
-      spending: parseFloat(spending)
+        id: subcategory.id,
+        allotted: parseFloat(allotted),
+        spending: parseFloat(spending)
     });
     onClose();
   };

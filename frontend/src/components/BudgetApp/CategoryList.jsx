@@ -24,7 +24,7 @@ const CategoryList = ({
               categoryData={categoryData}
               isExpanded={expandedCategories.includes(categoryName)}
               onToggle={() => toggleCategory(categoryName)}
-              onAddSubcategory={() => openModal('subcategory', categoryName)}
+              onAddSubcategory={() => openModal('subcategory', {id:categoryData.id})}
               onDeleteCategory={() => handleDeleteCategory(categoryData.id)}
               onDeleteSubcategory={handleDeleteSubcategory}
               onEditSubcategory={handleEditSubcategory}
@@ -80,7 +80,7 @@ const CategoryItem = ({
   );
 };
 
-const CategoryActions = ({ onAddSubcategory, onDeleteCategory }) => {
+const CategoryActions = ({ onAddSubcategory, onDeleteCategory, categoryId }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -89,7 +89,7 @@ const CategoryActions = ({ onAddSubcategory, onDeleteCategory }) => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem onClick={onAddSubcategory}>
+        <DropdownMenuItem onClick={() => onAddSubcategory(categoryId)}>
           <Plus className="w-4 h-4 mr-2" />
           Add Subcategory
         </DropdownMenuItem>
@@ -136,7 +136,7 @@ const SubcategoryItem = ({ item, categoryId, onDeleteSubcategory, onEditSubcateg
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          <DropdownMenuItem onClick={() => onEditSubcategory(item, categoryId)}>
+          <DropdownMenuItem onClick={() => onEditSubcategory({id: item.id, allotted: item.allotted, spending:item.spending})}>
             Edit
           </DropdownMenuItem>
           <DropdownMenuItem

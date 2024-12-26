@@ -7,22 +7,19 @@ from datetime import datetime
 
 class Category(Base):
     __tablename__ = "categories"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, index=True)
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
     budget = Column(Float)
+    year = Column(Integer)  # Add year
+    month = Column(Integer) # Add month
     created_at = Column(DateTime, default=datetime.utcnow)
     subcategories = relationship("Subcategory", back_populates="category")
 
-
 class Subcategory(Base):
     __tablename__ = "subcategories"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
     allotted = Column(Float)
-    year = Column(Integer)
-    month = Column(Integer)
     category_id = Column(Integer, ForeignKey("categories.id"))
     created_at = Column(DateTime, default=datetime.utcnow)
     category = relationship("Category", back_populates="subcategories")
