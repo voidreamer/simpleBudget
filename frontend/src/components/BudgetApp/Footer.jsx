@@ -10,7 +10,7 @@ const Footer = ({ categories }) => {
     <footer className="bg-white shadow">
       <div className="mx-auto px-4 py-3">
         <div className="text-center text-sm text-gray-500">
-          Total Budget: ${totalBudget} • Spent: ${totalSpent} • Remaining: ${remaining}
+          Total Budget: <b>${totalBudget}</b> • Spent: ${totalSpent} • Remaining: ${remaining}
         </div>
       </div>
     </footer>

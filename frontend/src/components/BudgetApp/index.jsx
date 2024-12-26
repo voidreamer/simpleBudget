@@ -164,44 +164,5 @@ const BudgetApp = () => {
     </div>
   );
 };
-const SubcategoryList = ({ items, categoryName, onDeleteSubcategory, onEditSubcategory }) => {
-  return (
-    <div className="border-t border-gray-200">
-      {items.map((item) => (
-        <div
-          key={item.name}
-          className="p-3 pl-10 hover:bg-gray-50 flex justify-between items-center"
-        >
-          <span>{item.name}</span>
-          <div className="flex items-center gap-4">
-            <span className="text-blue-600">${item.allotted}</span>
-            <span className={item.spending > item.allotted ? 'text-red-600' : 'text-green-600'}>
-              ${item.spending}
-            </span>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <MoreVertical className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => onEditSubcategory(item)}>
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => onDeleteSubcategory(categoryName, item.name)}
-                  className="text-red-600"
-                >
-                  <Trash className="w-4 h-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
+
 export default BudgetApp;
