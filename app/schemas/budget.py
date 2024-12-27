@@ -13,6 +13,15 @@ class TransactionCreate(TransactionBase):
     subcategory_id: int
 
 
+class TransactionUpdate(BaseModel):
+    description: Optional[str] = None
+    amount: Optional[float] = None
+    date: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
 class Transaction(TransactionBase):
     id: int
     subcategory_id: int

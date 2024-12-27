@@ -54,36 +54,8 @@ def month_to_number(month: str) -> int:
 @router.get("/budget-summary/{year}/{month}")
 def get_budget_summary(year: int, month: Union[str, int], db: Session = Depends(get_db)):
     month_num = month_to_number(month) if isinstance(month, str) else month
+    return service.get_budget_summary(db, year, month_num)
 
-    categories = db.query(models.Category).filter(
-        models.Category.year == year,
-        models.Category.month == month_num
-    ).all()
-
-    result = []
-    for category in categories:
-        category_data = {
-            "id": category.id,
-            "name": category.name,
-            "budget": category.budget,
-            "subcategories": []
-        }
-
-        for subcategory in category.subcategories:
-            spending = db.query(func.sum(models.Transaction.amount)). \
-                           filter(models.Transaction.subcategory_id == subcategory.id). \
-                           scalar() or 0.0
-            subcategory_data = {
-                "id": subcategory.id,
-                "name": subcategory.name,
-                "allotted": subcategory.allotted,
-                "spending": float(spending)
-            }
-            category_data["subcategories"].append(subcategory_data)
-
-        result.append(category_data)
-
-    return result
 
 @router.delete("/categories/{category_id}")
 def delete_category(category_id: int, db: Session = Depends(get_db)):
@@ -127,3 +99,32 @@ def update_subcategory(subcategory_id: int, data: dict, db: Session = Depends(ge
 
     db.commit()
     return subcategory
+
+
+@router.delete("/transactions/{transaction_id}")
+def delete_transaction(transaction_id: int, db: Session = Depends(get_db)):
+    transaction = db.query(models.Transaction).filter(models.Transaction.id == transaction_id).first()
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+
+    db.delete(transaction)
+    db.commit()
+    return {"status": "success"}
+
+
+@router.put("/transactions/{transaction_id}")
+def update_transaction(
+        transaction_id: int,
+        transaction_update: schemas.TransactionUpdate,
+        db: Session = Depends(get_db)
+):
+    transaction = db.query(models.Transaction).filter(models.Transaction.id == transaction_id).first()
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+
+    for field, value in transaction_update.dict(exclude_unset=True).items():
+        setattr(transaction, field, value)
+
+    db.commit()
+    db.refresh(transaction)
+    return transaction

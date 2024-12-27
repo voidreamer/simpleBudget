@@ -46,40 +46,43 @@ def create_transaction(db: Session, transaction: schemas.TransactionCreate):
 
 
 def get_budget_summary(db: Session, year: int, month: int):
-    # Implementation for getting monthly budget summary
-    start_date = datetime(year, month, 1)
-    if month == 12:
-        end_date = datetime(year + 1, 1, 1)
-    else:
-        end_date = datetime(year, month + 1, 1)
+    """Get budget summary with categories, subcategories and transactions."""
+    categories = db.query(models.Category).filter(
+        models.Category.year == year,
+        models.Category.month == month
+    ).all()
 
-    categories = db.query(models.Category).all()
-    summary = []
-
+    result = []
     for category in categories:
         category_data = {
+            "id": category.id,
             "name": category.name,
             "budget": category.budget,
-            "allotted": 0,
-            "spending": 0,
             "subcategories": []
         }
 
         for subcategory in category.subcategories:
-            subcategory_spending = sum(
-                t.amount for t in subcategory.transactions
-                if start_date <= t.date < end_date
-            )
+            # Get transactions and total spending
+            transactions = db.query(models.Transaction).filter(
+                models.Transaction.subcategory_id == subcategory.id
+            ).all()
 
-            category_data["subcategories"].append({
+            spending = sum(t.amount for t in transactions)
+
+            subcategory_data = {
+                "id": subcategory.id,
                 "name": subcategory.name,
                 "allotted": subcategory.allotted,
-                "spending": subcategory_spending
-            })
+                "spending": float(spending),
+                "transactions": [{
+                    "id": t.id,
+                    "description": t.description,
+                    "amount": float(t.amount),
+                    "date": t.date.isoformat()
+                } for t in transactions]
+            }
+            category_data["subcategories"].append(subcategory_data)
 
-            category_data["allotted"] += subcategory.allotted
-            category_data["spending"] += subcategory_spending
+        result.append(category_data)
 
-        summary.append(category_data)
-
-    return summary
+    return result
