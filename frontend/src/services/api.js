@@ -70,15 +70,15 @@ export const budgetApi = {
   },
 
   async createTransaction(data) {
+    console.log('Creating transaction with:', data); // Debug
     const response = await fetch(`${API_BASE_URL}/transactions/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        description: data.description,
-        amount: data.amount,
-        subcategory_id: data.subcategoryId,
-        date: new Date().toISOString()
-      })
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            description: data.description,
+            amount: data.amount,
+            subcategory_id: data.subcategory_id // Ensure this is included
+        })
     });
     return response.json();
   },

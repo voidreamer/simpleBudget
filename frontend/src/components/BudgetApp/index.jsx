@@ -5,6 +5,7 @@ import ChartSection from './ChartSection';
 import Footer from './Footer';
 import CategoryModal from './CategoryModal';
 import EditSubcategoryModal from './EditSubcategoryModal';
+import TransactionModal from './TransactionModal';
 import { budgetApi } from '../../services/api';
 
 const BudgetApp = () => {
@@ -14,6 +15,7 @@ const BudgetApp = () => {
   const [modalType, setModalType] = useState('category');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [editingSubcategory, setEditingSubcategory] = useState(null);
+  const [addingTransactionTo, setAddingTransactionTo] = useState(null);
   const [categories, setCategories] = useState({
     'Fixed Expenses': {
       budget: 1000,
@@ -113,6 +115,18 @@ const BudgetApp = () => {
       }
     };
 
+    const handleAddTransaction = async (data) => {
+        console.log('Transaction data:', data);
+      try {
+        await budgetApi.createTransaction(data);
+        const [month, year] = selectedDate.split(' ');
+        await loadBudgetData(year, month);
+        setAddingTransactionTo(null);
+      } catch (error) {
+        console.error('Error adding transaction:', error);
+      }
+    };
+
   const loadBudgetData = async (year, month) => {
       try {
         console.log(`Loading budget data for ${year} ${month}`);
@@ -155,6 +169,7 @@ const BudgetApp = () => {
           handleDeleteCategory={handleDeleteCategory}
           handleDeleteSubcategory={handleDeleteSubcategory}
           handleEditSubcategory={setEditingSubcategory}
+          onAddTransaction={setAddingTransactionTo}
         />
         <ChartSection chartData={chartData} />
       </main>
@@ -172,6 +187,12 @@ const BudgetApp = () => {
         subcategory={editingSubcategory}
         onSubmit={handleEditSubcategory}
       />
+      <TransactionModal
+          isOpen={!!addingTransactionTo}
+          onClose={() => setAddingTransactionTo(null)}
+          subcategory={addingTransactionTo}
+          onSubmit={handleAddTransaction}
+        />
     </div>
   );
 };

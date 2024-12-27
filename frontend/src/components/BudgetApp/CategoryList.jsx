@@ -10,7 +10,8 @@ const CategoryList = ({
   openModal,
   handleDeleteCategory,
   handleDeleteSubcategory,
-  handleEditSubcategory
+  handleEditSubcategory,
+  onAddTransaction
 }) => {
   return (
     <div className="w-1/2 bg-white rounded-lg shadow">
@@ -28,6 +29,7 @@ const CategoryList = ({
               onDeleteCategory={() => handleDeleteCategory(categoryData.id)}
               onDeleteSubcategory={handleDeleteSubcategory}
               onEditSubcategory={handleEditSubcategory}
+              onAddTransaction={onAddTransaction}
             />
           ))}
         </div>
@@ -44,7 +46,8 @@ const CategoryItem = ({
   onAddSubcategory,
   onDeleteCategory,
   onDeleteSubcategory,
-  onEditSubcategory
+  onEditSubcategory,
+  onAddTransaction
 }) => {
   return (
     <div className="rounded-lg border border-gray-200">
@@ -74,6 +77,7 @@ const CategoryItem = ({
           categoryName={categoryName}
           onDeleteSubcategory={onDeleteSubcategory}
           onEditSubcategory={onEditSubcategory}
+          onAddTransaction={onAddTransaction}
         />
       )}
     </div>
@@ -107,7 +111,7 @@ const CategoryActions = ({ onAddSubcategory, onDeleteCategory, categoryId }) => 
   );
 };
 
-const SubcategoryList = ({ items, categoryName, onDeleteSubcategory, onEditSubcategory }) => (
+const SubcategoryList = ({ items, categoryName, onDeleteSubcategory, onEditSubcategory, onAddTransaction }) => (
   <div className="border-t border-gray-200">
     {items.map((item) => (
       <SubcategoryItem
@@ -116,12 +120,13 @@ const SubcategoryList = ({ items, categoryName, onDeleteSubcategory, onEditSubca
         categoryName={categoryName}
         onDeleteSubcategory={onDeleteSubcategory}
         onEditSubcategory={onEditSubcategory}
+        onAddTransaction={onAddTransaction}
       />
     ))}
   </div>
 );
 
-const SubcategoryItem = ({ item, categoryId, onDeleteSubcategory, onEditSubcategory}) => (
+const SubcategoryItem = ({ item, categoryId, onDeleteSubcategory, onEditSubcategory, onAddTransaction}) => (
   <div className="p-3 pl-10 hover:bg-gray-50 flex justify-between items-center">
     <span>{item.name}</span>
     <div className="flex items-center gap-4">
@@ -136,6 +141,9 @@ const SubcategoryItem = ({ item, categoryId, onDeleteSubcategory, onEditSubcateg
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
+            <Button onClick={() => onAddTransaction(item)}>
+              Add Transaction
+            </Button>
           <DropdownMenuItem onClick={() => onEditSubcategory({id: item.id, allotted: item.allotted, spending:item.spending})}>
             Edit
           </DropdownMenuItem>

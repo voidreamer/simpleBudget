@@ -70,7 +70,9 @@ def get_budget_summary(year: int, month: Union[str, int], db: Session = Depends(
         }
 
         for subcategory in category.subcategories:
-            spending = sum(t.amount for t in subcategory.transactions)
+            spending = db.query(func.sum(models.Transaction.amount)). \
+                           filter(models.Transaction.subcategory_id == subcategory.id). \
+                           scalar() or 0.0
             subcategory_data = {
                 "id": subcategory.id,
                 "name": subcategory.name,
