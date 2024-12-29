@@ -96,9 +96,27 @@ def update_subcategory(subcategory_id: int, data: dict, db: Session = Depends(ge
 
     if 'allotted' in data:
         subcategory.allotted = data['allotted']
+    if 'name' in data:
+        subcategory.name = data['name']
 
     db.commit()
     return subcategory
+
+
+@router.put("/categories/{category_id}")
+def update_category(category_id: int, data: dict, db: Session = Depends(get_db)):
+    print(f"Updating category {category_id} with data:", data)  # Debug
+    category = db.query(models.Category).filter(models.Category.id == category_id).first()
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found")
+
+    if 'budget' in data:
+        category.budget = data['budget']
+    if 'name' in data:
+        category.name = data['name']
+
+    db.commit()
+    return category
 
 
 @router.put("/transactions/{transaction_id}")
